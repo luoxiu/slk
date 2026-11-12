@@ -178,6 +178,6 @@ func DefaultKeyMap() KeyMap {
 		OpenInEditor: key.NewBinding(key.WithKeys("ctrl+e"), key.WithHelp("ctrl+e", "edit message in $EDITOR")),
 		// Normal mode: the focused pane (sidebar, channel or thread)
 		// fills the terminal; f again returns to the panes.
-		ToggleFullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "toggle full screen for the focused pane")),
+		ToggleFullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "toggle fullscreen for focused pane")),
 	}
 }
