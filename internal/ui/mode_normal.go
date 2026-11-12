@@ -10,7 +10,8 @@
 //     (page), G (bottom), Tab/h/l (focus next/prev), Ctrl-h/l
 //     (nav back/forward through visited channels; Ctrl-k is an
 //     alias for forward)
-//   - layout toggles: s (sidebar), t (thread)
+//   - layout toggles: s (sidebar), t (thread), f (full screen for the
+//     focused pane)
 //   - theme cycle: Alt-Y / Alt-Shift-Y apply the next / previous
 //     theme, wrapping around (saved per workspace, like Ctrl-Y)
 //   - message ops: y (copy message), Y/C (copy permalink), E (edit), D (delete),
@@ -205,6 +206,9 @@ func handleNormalMode(a *App, msg tea.KeyMsg) tea.Cmd {
 
 	case key.Matches(msg, a.keys.ToggleThread):
 		a.ToggleThread()
+
+	case key.Matches(msg, a.keys.ToggleFullscreen):
+		a.fullscreen = !a.fullscreen
 
 	case key.Matches(msg, a.keys.NavBack):
 		if cmd := a.navigateBack(); cmd != nil {

@@ -22,6 +22,7 @@ type KeyMap struct {
 	SidebarGrow         key.Binding
 	SidebarShrink       key.Binding
 	ToggleThread        key.Binding
+	ToggleFullscreen    key.Binding
 	FuzzyFinder         key.Binding
 	FuzzyFinderAlt      key.Binding
 	Top                 key.Binding
@@ -175,5 +176,8 @@ func DefaultKeyMap() KeyMap {
 		ToggleBroadcast: key.NewBinding(key.WithKeys("ctrl+o"), key.WithHelp("ctrl+o / alt+enter", "also send reply to channel")),
 		// Shadows the textarea's own ctrl+e (LineEnd); "End" still works.
 		OpenInEditor: key.NewBinding(key.WithKeys("ctrl+e"), key.WithHelp("ctrl+e", "edit message in $EDITOR")),
+		// Normal mode: the focused pane (sidebar, channel or thread)
+		// fills the terminal; f again returns to the panes.
+		ToggleFullscreen: key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "toggle full screen for the focused pane")),
 	}
 }
