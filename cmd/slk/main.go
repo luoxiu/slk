@@ -105,6 +105,8 @@ func main() {
 				os.Exit(1)
 			}
 			os.Exit(0)
+		case "message", "channel", "user", "search", "unreads", "listen", "auth", "later":
+			os.Exit(runAgentCommand(os.Args[1:]))
 		case "export":
 			if err := exportChannel(os.Args[2:]); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
