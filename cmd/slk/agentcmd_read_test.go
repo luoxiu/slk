@@ -467,6 +467,37 @@ func unreadsOne(t *testing.T, countsEntry, history string) *fakeSlack {
 	})
 }
 
+// A conversation never opened (a bot's DM nobody clicked into) has
+// last_read "0000000000.000000" in client.counts. Slack refuses that as
+// conversations.history's oldest (invalid_ts_oldest), and since one
+// failed conversation fails the whole command, every unread was lost
+// for a day on 2026-11-26. Read such a conversation from its start.
+func TestUnreadsNeverReadConversationReadsWithoutOldest(t *testing.T) {
+	srv := newReadFake(t, map[string]func(url.Values) string{
+		"/api/client.counts":      readFixed(`{"ok":true,"ims":[{"id":"D9","has_unreads":true,"mention_count":0,"last_read":"0000000000.000000"}]}`),
+		"/api/conversations.info": readFixed(`{"ok":true,"channel":{"id":"D9","is_im":true,"user":"U7"}}`),
+		"/api/users.info":         readFixed(`{"ok":true,"user":{"id":"U7","name":"portal","real_name":"Employee Portal","profile":{}}}`),
+		"/api/conversations.history": func(form url.Values) string {
+			if _, set := form["oldest"]; set && strings.Trim(form.Get("oldest"), "0.") == "" {
+				return `{"ok":false,"error":"invalid_ts_oldest"}`
+			}
+			return `{"ok":true,"messages":[{"type":"message","user":"U7","text":"hello","ts":"1795759222.237019"}]}`
+		},
+	})
+	code, out, errOut := runRead(t, srv, "unreads", "--max-messages", "3")
+	if code != 0 {
+		t.Fatalf("exit %d: %s", code, errOut)
+	}
+	if !strings.Contains(out, `"channel_id":"D9"`) || !strings.Contains(out, `"content":"hello"`) {
+		t.Errorf("the never-read DM and its message are missing: %s", out)
+	}
+	for _, r := range srv.requestsTo("/api/conversations.history") {
+		if _, set := r.form["oldest"]; set {
+			t.Errorf("history asked with oldest %q, want no oldest for a never-read conversation", r.form.Get("oldest"))
+		}
+	}
+}
+
 func TestUnreadsDropsSystemMessagesAndMarksCuts(t *testing.T) {
 	srv := unreadsOne(t, `{"id":"C1","has_unreads":true,"last_read":"1.0"}`, `{"ok":true,"has_more":false,"messages":[
 	 {"type":"message","subtype":"channel_topic","user":"U2","text":"set the channel topic: x","topic":"x","ts":"1700000006.000100"},

@@ -229,7 +229,7 @@ func readAgentUnread(ctx context.Context, client *slackclient.Client, lim chan s
 		go func() {
 			defer wg.Done()
 			page, histErr = agentLimited(ctx, lim, func() (agentHistoryPage, error) {
-				msgs, more, err := client.ReadHistoryAfter(u.ID, u.LastRead, maxMessages)
+				msgs, more, err := client.ReadHistoryAfter(u.ID, agentHistoryOldest(u.LastRead), maxMessages)
 				return agentHistoryPage{msgs, more}, err
 			})
 		}()
@@ -258,6 +258,19 @@ func readAgentUnread(ctx context.Context, client *slackclient.Client, lim chan s
 		ch.Messages = append(ch.Messages, encodeAgentMessage(m, u.ID, opts))
 	}
 	return ch, nil
+}
+
+// agentHistoryOldest is the oldest to read an unread conversation's
+// history after: its last_read, except Slack's never-read sentinel
+// ("0000000000.000000", or bare "0"; see parseSlackTS in
+// internal/ui/sidebar), which conversations.history refuses as
+// invalid_ts_oldest. A conversation never opened is read from its
+// start instead (the newest max-messages of it).
+func agentHistoryOldest(lastRead string) string {
+	if strings.Trim(lastRead, "0.") == "" {
+		return ""
+	}
+	return lastRead
 }
 
 type agentHistoryPage struct {
